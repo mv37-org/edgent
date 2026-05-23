@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+.DS_Store
+*.tgz
+examples/codemirror-basic/dist
+examples/codemirror-basic/node_modules

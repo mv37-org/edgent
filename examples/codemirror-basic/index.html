@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edgent CodeMirror Example</title>
+  </head>
+  <body>
+    <main class="app">
+      <section class="editor-shell">
+        <div class="toolbar">
+          <button id="run" type="button">Run agent</button>
+          <button id="approve" type="button" disabled>Approve edit</button>
+          <button id="reject" type="button" disabled>Reject edit</button>
+          <button id="cancel" type="button">Cancel</button>
+        </div>
+        <div id="editor"></div>
+      </section>
+      <aside class="timeline">
+        <h1>Events</h1>
+        <ol id="events"></ol>
+      </aside>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

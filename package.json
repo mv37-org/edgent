@@ -1,0 +1,97 @@
+{
+  "name": "@mv37/edgent",
+  "version": "0.1.0",
+  "description": "Headless browser agent SDK for CodeMirror, schema-first tools, and host-provided model streams.",
+  "type": "module",
+  "license": "MIT",
+  "author": "MV37",
+  "homepage": "https://github.com/mv37-org/edgent#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mv37-org/edgent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mv37-org/edgent/issues"
+  },
+  "keywords": [
+    "agent",
+    "browser",
+    "codemirror",
+    "llm",
+    "pyodide",
+    "tools"
+  ],
+  "packageManager": "npm@11.4.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./codemirror": {
+      "types": "./dist/codemirror.d.ts",
+      "import": "./dist/codemirror.js"
+    },
+    "./pyodide": {
+      "types": "./dist/pyodide.d.ts",
+      "import": "./dist/pyodide.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "pack:dry-run": "npm pack --dry-run",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+  },
+  "peerDependencies": {
+    "@codemirror/merge": "^6.12.1",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.0"
+  },
+  "peerDependenciesMeta": {
+    "@codemirror/merge": {
+      "optional": true
+    },
+    "@codemirror/state": {
+      "optional": true
+    },
+    "@codemirror/view": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@codemirror/commands": "^6.10.0",
+    "@codemirror/lang-javascript": "^6.2.4",
+    "@codemirror/merge": "^6.12.1",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.0",
+    "@types/node": "^24.0.0",
+    "eslint": "^9.0.0",
+    "jsdom": "^27.0.0",
+    "prettier": "^3.5.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.0.0",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.7"
+  }
+}
