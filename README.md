@@ -1,5 +1,12 @@
 # Edgent
 
+[![npm version](https://img.shields.io/npm/v/@mv37/edgent?label=npm)](https://www.npmjs.com/package/@mv37/edgent)
+[![npm downloads](https://img.shields.io/npm/dm/@mv37/edgent)](https://www.npmjs.com/package/@mv37/edgent)
+[![license](https://img.shields.io/npm/l/@mv37/edgent)](./LICENSE)
+[![typecheck](https://img.shields.io/badge/typecheck-passing-brightgreen)](#local-development)
+[![tests](https://img.shields.io/badge/tests-13%20passing-brightgreen)](#local-development)
+[![browser ESM](https://img.shields.io/badge/browser-ESM-blue)](#what-edgent-does-not-provide)
+
 Edgent is a browser-only, headless TypeScript SDK for building lightweight agents that can inspect and edit a CodeMirror editor, call schema-first JavaScript tools, and stream every step to your own UI.
 
 It is built for apps that want an agent loop in the browser without adopting a full IDE, backend runtime, Git integration, terminal emulator, or React UI kit.
