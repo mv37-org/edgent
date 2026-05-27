@@ -1,6 +1,6 @@
 {
   "name": "@mv37/edgent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Headless browser agent SDK for CodeMirror, schema-first tools, and host-provided model streams.",
   "type": "module",
   "license": "MIT",

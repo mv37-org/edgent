@@ -10,7 +10,7 @@
 [![typecheck](https://img.shields.io/badge/typecheck-passing-brightgreen)](#local-development)
 [![lint](https://img.shields.io/badge/lint-passing-brightgreen)](#local-development)
 [![format](https://img.shields.io/badge/format-passing-brightgreen)](#local-development)
-[![tests](https://img.shields.io/badge/tests-13%20passing-brightgreen)](#local-development)
+[![tests](https://img.shields.io/badge/tests-19%20passing-brightgreen)](#local-development)
 [![build](https://img.shields.io/badge/build-passing-brightgreen)](#local-development)
 [![pack](https://img.shields.io/badge/npm%20pack-passing-brightgreen)](#local-development)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-3178C6)](https://www.typescriptlang.org/)
@@ -38,6 +38,8 @@ It is built for apps that want an agent loop in the browser without adopting a f
 - A headless agent loop with `run()`, `cancel()`, async event iteration, and event listeners.
 - A provider-neutral `ModelAdapter` interface. Use OpenAI, Anthropic, Gemini, OpenRouter, your own backend, or a mock model.
 - Schema-first JavaScript tools with lightweight argument validation.
+- Mutating lifecycle hooks for model calls, tool calls, and runtime errors.
+- Model-driven context compaction for long browser-local runs.
 - A CodeMirror 6 workspace adapter for snapshots, versioned edits, stale-edit checks, and diff approval.
 - A Pyodide helper that wraps a host-provided Python runtime as a tool.
 - A small Vite example app that demonstrates model streaming, tool calls, edit approvals, and event rendering.
@@ -121,7 +123,9 @@ const agent = createBrowserAgent({
   tools,
   maxTurns,
   responseFormat,
-  settings
+  settings,
+  hooks,
+  contextCompaction
 });
 ```
 
@@ -218,6 +222,67 @@ Tools receive:
 
 Use tools as the permission boundary. If the host does not register a tool, the agent cannot do that action.
 
+## Lifecycle Hooks
+
+Hooks let the host inspect or mutate agent lifecycle steps without replacing the whole run loop.
+
+```ts
+const agent = createBrowserAgent({
+  model,
+  hooks: [
+    {
+      event: "before_model_call",
+      name: "add_context",
+      handler(input) {
+        if (input.event !== "before_model_call") return;
+        return {
+          request: {
+            messages: [...input.request.messages, { role: "user", content: "Remember the current task." }]
+          }
+        };
+      }
+    }
+  ]
+});
+```
+
+Supported hook events:
+
+- `before_model_call`
+- `after_model_call`
+- `before_tool_call`
+- `after_tool_call`
+- `on_error`
+
+Hooks may replace model request fields, model content, tool calls, or tool results. A thrown hook error emits `hook.error` and fails the run.
+
+## Context Compaction
+
+Context compaction checks the estimated request size before each model turn. When the configured threshold is reached, Edgent asks the host-provided compaction model to summarize the oldest message prefix, keeps the recent tail verbatim, and continues with:
+
+- System prompt
+- Compacted summary message
+- Recent messages
+
+```ts
+const agent = createBrowserAgent({
+  model,
+  contextCompaction: {
+    enabled: true,
+    thresholdPercent: 80,
+    contextWindowTokens: 128000,
+    prompt: "Summarize the conversation so far, preserving goals, decisions, tool results, and next steps.",
+    model: compactionModel,
+    preserveRecentMessages: 6,
+    estimateTokens(input) {
+      return Math.ceil(JSON.stringify(input).length / 4);
+    }
+  }
+});
+```
+
+Edgent does not bundle tokenizers or provider clients. The host supplies the compaction model adapter and can override token estimation.
+
 ## CodeMirror Adapter
 
 ```ts
@@ -288,6 +353,11 @@ Core events include:
 - `tool.started`
 - `tool.result`
 - `tool.error`
+- `hook.started`
+- `hook.completed`
+- `hook.error`
+- `context.compaction.started`
+- `context.compaction.completed`
 - `edit.proposed`
 - `edit.applied`
 - `approval.requested`

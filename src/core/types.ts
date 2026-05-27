@@ -93,6 +93,135 @@ export interface ModelAdapterRequest {
 
 export type ModelAdapter = (request: ModelAdapterRequest) => AsyncIterable<ModelStreamEvent>;
 
+export interface ModelTurnResult {
+  content: string;
+  toolCalls: ToolCall[];
+}
+
+export type AgentLifecycleHookEvent =
+  | "before_model_call"
+  | "after_model_call"
+  | "before_tool_call"
+  | "after_tool_call"
+  | "on_error";
+
+export interface AgentLifecycleHookBaseInput {
+  event: AgentLifecycleHookEvent;
+  runId: string;
+  turn: number;
+  messages: AgentMessage[];
+  signal: AbortSignal;
+  emit(event: AgentEventInput): void;
+}
+
+export interface BeforeModelCallHookInput extends AgentLifecycleHookBaseInput {
+  event: "before_model_call";
+  request: ModelAdapterRequest;
+}
+
+export interface AfterModelCallHookInput extends AgentLifecycleHookBaseInput {
+  event: "after_model_call";
+  result: ModelTurnResult;
+}
+
+export interface BeforeToolCallHookInput extends AgentLifecycleHookBaseInput {
+  event: "before_tool_call";
+  toolCall: ToolCall;
+}
+
+export interface AfterToolCallHookInput extends AgentLifecycleHookBaseInput {
+  event: "after_tool_call";
+  toolCall: ToolCall;
+  result: unknown;
+}
+
+export interface ErrorHookInput extends AgentLifecycleHookBaseInput {
+  event: "on_error";
+  error: AgentErrorInfo;
+}
+
+export type AgentLifecycleHookInput =
+  | BeforeModelCallHookInput
+  | AfterModelCallHookInput
+  | BeforeToolCallHookInput
+  | AfterToolCallHookInput
+  | ErrorHookInput;
+
+export interface ModelAdapterRequestPatch {
+  system?: string;
+  messages?: AgentMessage[];
+  tools?: ToolSpec[];
+  responseFormat?: unknown;
+  settings?: Record<string, unknown>;
+}
+
+export interface BeforeModelCallHookResult {
+  request?: ModelAdapterRequestPatch;
+  skip?: Partial<ModelTurnResult>;
+}
+
+export interface AfterModelCallHookResult {
+  content?: string;
+  toolCalls?: ToolCall[];
+  appendMessages?: AgentMessage[];
+}
+
+export interface BeforeToolCallHookResult {
+  toolCall?: ToolCall;
+  skip?: { result: unknown };
+  appendMessages?: AgentMessage[];
+}
+
+export interface AfterToolCallHookResult {
+  result?: unknown;
+  appendMessages?: AgentMessage[];
+}
+
+export interface ErrorHookResult {
+  appendMessages?: AgentMessage[];
+}
+
+export type AgentLifecycleHookResult =
+  | void
+  | BeforeModelCallHookResult
+  | AfterModelCallHookResult
+  | BeforeToolCallHookResult
+  | AfterToolCallHookResult
+  | ErrorHookResult;
+
+export type AgentLifecycleHookHandler = (
+  input: AgentLifecycleHookInput
+) => Promise<AgentLifecycleHookResult> | AgentLifecycleHookResult;
+
+export interface AgentLifecycleHook {
+  event: AgentLifecycleHookEvent;
+  name?: string;
+  handler: AgentLifecycleHookHandler;
+}
+
+export interface ContextTokenEstimateInput {
+  runId: string;
+  turn: number;
+  system: string;
+  messages: AgentMessage[];
+  tools: ToolSpec[];
+  responseFormat?: unknown;
+  settings?: Record<string, unknown>;
+}
+
+export type ContextTokenEstimator = (input: ContextTokenEstimateInput) => number | Promise<number>;
+
+export interface ContextCompactionConfig {
+  enabled?: boolean;
+  thresholdPercent: number;
+  contextWindowTokens: number;
+  prompt: string;
+  model: ModelAdapter;
+  preserveRecentMessages?: number;
+  estimateTokens?: ContextTokenEstimator;
+  settings?: Record<string, unknown>;
+}
+
 export type AgentRunInput =
   | string
   | {
@@ -108,6 +237,8 @@ export interface BrowserAgentConfig {
   maxTurns?: number;
   responseFormat?: unknown;
   settings?: Record<string, unknown>;
+  hooks?: AgentLifecycleHook[];
+  contextCompaction?: ContextCompactionConfig;
 }
 
 export type AgentEvent =
@@ -148,6 +279,53 @@ export type AgentEvent =
       timestamp: number;
       toolCall: ToolCall;
       error: AgentErrorInfo;
+    }
+  | {
+      type: "hook.started";
+      runId: string;
+      timestamp: number;
+      hook: {
+        event: AgentLifecycleHookEvent;
+        name?: string;
+      };
+    }
+  | {
+      type: "hook.completed";
+      runId: string;
+      timestamp: number;
+      hook: {
+        event: AgentLifecycleHookEvent;
+        name?: string;
+      };
+    }
+  | {
+      type: "hook.error";
+      runId: string;
+      timestamp: number;
+      hook: {
+        event: AgentLifecycleHookEvent;
+        name?: string;
+      };
+      error: AgentErrorInfo;
+    }
+  | {
+      type: "context.compaction.started";
+      runId: string;
+      timestamp: number;
+      tokenEstimate: number;
+      thresholdTokens: number;
+      compactedMessageCount: number;
+      preservedMessageCount: number;
+    }
+  | {
+      type: "context.compaction.completed";
+      runId: string;
+      timestamp: number;
+      tokenEstimate: number;
+      thresholdTokens: number;
+      summary: string;
+      compactedMessageCount: number;
+      preservedMessageCount: number;
     }
   | {
       type: "edit.proposed";
