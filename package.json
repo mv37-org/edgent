@@ -59,6 +59,7 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "pack:dry-run": "npm pack --dry-run",
+    "prepare": "npm run build",
     "prepack": "npm run build",
     "prepublishOnly": "npm run typecheck && npm run test && npm run build"
   },
